@@ -1,5 +1,7 @@
-from bottle import Bottle, route, run, get, template, post, request
+from bottle import Bottle, route, run, get, template, post, request, response
 import pymysql
+#import json
+
 
 def createUser(user,password):
 	mysql_config = {
@@ -21,15 +23,42 @@ def createUser(user,password):
 		cnx.close()
 	except pymysql.err as err:
 		print "Failed to connect.....{0}".format(err)
-		return -1
+		return False
 
-	return 1
+	return True
+
+def searchUser(user,password):
+	mysql_config = {
+		'host':'localhost',
+		'db': 'users',
+		'user':'root',
+		'passwd':'root'
+	}
+	cnx = None
+	try: 
+		cnx = pymysql.connect(**mysql_config)
+
+		selectStr = "select count(*) from credentials where username='{0}' and password='{1}'".format(user, password)
+		#data = (user,password)
+		cursor = cnx.cursor()
+		cursor.execute(selectStr)
+		row = cursor.fetchone()
+		print "count:{0}".format(row[0])
+		cursor.close()
+		cnx.close()
+		if row[0] > 0:
+			return True
+		else:
+			return False		
+	except pymysql.err as err:
+		print "Failed to select.....{0}".format(err)
+		return False
 
 
 app = Bottle()
 
-users = [{"username": "pepe", "password": "pepe123"},\
-         {"username": "pepe4", "password": "pepe1234"}]
+#users = [{"username": "pepe", "password": "pepe123"},\
+#         {"username": "pepe4", "password": "pepe1234"}]
 
 @app.route('/hello', method="GET")
 def hello():
@@ -50,10 +79,15 @@ def hello_json():
 @app.post('/login')
 def login_json():
 	data = request.json
-	if data in users:
-		return { "status": "OK", "Description": "Bienvenido"}
+	#response.content_type = 'application/json'
+	#response.status = 200
+	#return json.dumps({ "status": "OK", "message": "Bienvenido"})
 
-	return {"status": "ERROR", "Description": "se ingreso mal el usuario"}
+	a = searchUser(data["username"], data["password"])
+	if a:
+		return { "status": "OK", "message": "Bienvenido"}
+
+	return {"status": "ERROR", "message": "se ingreso mal el usuario"}
 
 @app.post('/register')
 def register_json():
@@ -62,9 +96,9 @@ def register_json():
 	#users.append(data)
 	a = createUser(data["username"], data["password"])
 	if a:
-		return {"status": "OK", "Description": "se registro correctamente el usuario"}
+		return {"status": "OK", "message": "se registro correctamente el usuario"}
 	else:
-		return {"status": "ERROR", "Description": "No se pudo registrar"}
+		return {"status": "ERROR", "message": "No se pudo registrar"}
 run(app,host='127.0.0.1',port=8081)
 
 

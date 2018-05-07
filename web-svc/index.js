@@ -3,6 +3,7 @@
 var express = require('express');
 var hb = require("express-handlebars");
 var bodyparser = require('body-parser');
+var request = require('request');
 var app = express();
 
 const hbsOpts = {
@@ -20,8 +21,27 @@ app.engine('handlebars', hbs.engine)
 app.set('view engine', 'handlebars')
 app.use(bodyparser.urlencoded({extended: true}));
 
-var login = function(credentials){
-    return true;
+var login = async function(credentials){
+    console.log('credentials:');
+    console.dir(credentials);
+    
+    const options = {
+        headers: {'content-type' : 'application/json'},
+        url: 'http://localhost:8081/login',
+        body: JSON.stringify(credentials)
+    };
+    await request.post(options, doLogin);
+
+}
+
+var doLogin = function(err, resp, body) {
+    console.log(body);
+    let data = JSON.parse(body);
+    console.log(data);
+    if(data.status == "OK") {
+        return true;
+    }
+    return false;
 }
 
 // root..
@@ -50,25 +70,33 @@ app.post('/login', function(req, res){
     const credentials = {
         username: req.body.username,
         password: req.body.password
-    }
-    if(login(credentials)) {
-        const homeParams = {
-            title: 'titulo',
-            identified: true,
-            items: [1,2,3],
-            helpers: {
-                bar: function() {return "bar";}
+    }    
+    const options = {
+        headers: {'content-type' : 'application/json'},
+        url: 'http://localhost:8081/login',
+        body: JSON.stringify(credentials)
+    };
+    request.post(options, function(error, response, body) {
+        let data = JSON.parse(body);
+        console.dir(data);
+        if(data.status == "OK") {
+            const homeParams = {
+                title: 'titulo',
+                identified: true,
+                items: [1,2,3],
+                helpers: {
+                    bar: function() {return "bar";}
+                }
             }
+            res.render('home', homeParams);    
+        } else {
+            const loginParams = {
+                error: true,
+                errorMsg: data.message
+            }
+            res.render('login', loginParams);
         }
-        res.render('home', homeParams);    
-    }
-    else {
-        const loginParams = {
-            error: true,
-            errorMsg: 'invalid credentials'
-        }
-        res.render('login', loginParams);
-    }
+    });
 });
 
 var server = app.listen(8080, '127.0.0.1', function()   {

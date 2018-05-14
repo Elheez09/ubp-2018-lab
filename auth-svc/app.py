@@ -17,12 +17,15 @@ def createUser(user,password):
 		insertStr = "INSERT INTO credentials (username,password) VALUES(%s,%s)"
 		data = (user,password)
 		cursor = cnx.cursor()
+		print "insertando fila 1"
 		cursor.execute(insertStr,data)
+		print "insertando fila 2"
 		cnx.commit()
+		print "insertando fila 3"
 		cursor.close()
 		cnx.close()
-	except pymysql.err as err:
-		print "Failed to connect.....{0}".format(err)
+	except pymysql.MySQLError as err:
+		print "MySQLError: {0}".format(err)
 		return False
 
 	return True
@@ -39,7 +42,6 @@ def searchUser(user,password):
 		cnx = pymysql.connect(**mysql_config)
 
 		selectStr = "select count(*) from credentials where username='{0}' and password='{1}'".format(user, password)
-		#data = (user,password)
 		cursor = cnx.cursor()
 		cursor.execute(selectStr)
 		row = cursor.fetchone()
@@ -50,7 +52,7 @@ def searchUser(user,password):
 			return True
 		else:
 			return False		
-	except pymysql.err as err:
+	except pymysql.MySQLError as err:
 		print "Failed to select.....{0}".format(err)
 		return False
 

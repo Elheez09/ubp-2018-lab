@@ -54,8 +54,8 @@ app.get('/', function(req, res) {
             bar: function() {return "bar";}
         }
     }
-    res.redirect('login'),
-    res.render('home', homeParams);
+    res.redirect('login');
+    //res.render('home', homeParams);
 });
 
 // login..
@@ -105,4 +105,46 @@ var server = app.listen(8080, '127.0.0.1', function()   {
     console.log("listening at http://%s:%s", host, port);
 });
 
+app.get('/register', function(req, res){
+    res.render('register');
+});
+
+app.post('/register', function(req, res){
+    console.log('POST /register');
+    console.log('username:' + req.body.username);
+    console.log('password:' + req.body.password);
+    console.log('ggwp');
+    const credentials = {
+        username: req.body.username,
+        password: req.body.password
+    }    
+    const options = {
+        headers: {'content-type' : 'application/json'},
+        url: 'http://localhost:8081/register',
+        body: JSON.stringify(credentials)
+    };
+    request.post(options, function(error, response, body) {
+        let data = JSON.parse(body);
+        console.dir(data);
+        if(data.status == "OK") {
+            const homeParams = {
+                title: 'titulo',
+                identified: true,
+                items: [1,2,3],
+                helpers: {
+                    bar: function() {return "bar";}
+                }
+            }
+            res.render('login', homeParams);    
+        } 
+        else {
+            const registerParams = {
+                error: true,
+                errorMsg: data.message
+            }
+            res.render('register', registerParams);
+        }
+    });
+});
 // npm install express-handlebars --save
+// npm run live

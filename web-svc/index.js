@@ -86,7 +86,9 @@ app.post('/login', function(req, res){
                 items: [1,2,3],
                 helpers: {
                     bar: function() {return "bar";}
-                }
+                },
+                username: credentials.username,
+                password: credentials.password
             }
             res.render('home', homeParams);    
         } else {
@@ -146,5 +148,41 @@ app.post('/register', function(req, res){
         }
     });
 });
+
+app.post('/logout', function(req, res){
+    console.log('POST /logout');
+    console.log('username:' + req.body.username);
+    const body = {
+        username: req.body.username,
+        password: req.body.password
+    }
+    const options = {
+        headers: {'content-type' : 'application/json'},
+        url: 'http://localhost:8081/logout',
+        body: JSON.stringify(body)
+    };
+    request.post(options, function(error, response, body) {
+        let data = JSON.parse(body);
+        console.dir(data);
+        if(data.status == "OK") {
+            res.render('login');
+        } else {
+            const homeParams = {
+                title: 'titulo',
+                identified: true,
+                items: [1,2,3],
+                helpers: {
+                    bar: function() {return "bar";}
+                },
+                username: credentials.username,
+                password: credentials.password,
+                logouterror: true,
+                errorMsg: data.message
+            }
+            res.render('home', homeParams);
+        }
+    });
+});
+
 // npm install express-handlebars --save
 // npm run live

@@ -8,7 +8,7 @@ def createUser(user,password):
 		'host':'localhost',
 		'db': 'users',
 		'user':'root',
-		'passwd':'root'
+		'passwd':'emauzumaki09'
 	}
 	cnx = None
 	try: 
@@ -21,7 +21,7 @@ def createUser(user,password):
 		cursor.close()
 		cnx.close()
 	except pymysql.MySQLError as err:
-		print "MySQLError: {0}".format(err)
+		print ("MySQLError: {0}".format(err))
 		return False, False
 		
 	cnx = pymysql.connect(**mysql_config)
@@ -38,7 +38,7 @@ def searchUser(user,password):
 		'host':'localhost',
 		'db': 'users',
 		'user':'root',
-		'passwd':'root'
+		'passwd':'emauzumaki09'
 	}
 	cnx = None
 	try: 
@@ -55,7 +55,7 @@ def searchUser(user,password):
 		else:
 			return False, False	
 	except pymysql.MySQLError as err:
-		print "Failed to select.....{0}".format(err)
+		print ("Failed to select.....{0}".format(err))
 		return False, False
 
 def auditEvent(event, userid):
@@ -63,20 +63,20 @@ def auditEvent(event, userid):
 		'host':'localhost',
 		'db': 'users',
 		'user':'root',
-		'passwd':'root'
+		'passwd':'emauzumaki09'
 	}
 	cnx = None
 	try: 
 		cnx = pymysql.connect(**mysql_config)
 		insertStr = "INSERT INTO audit_event (event,userid) VALUES('{0}',{1})".format(event,userid)
-		print insertStr
+		print (insertStr)
 		cursor = cnx.cursor()
 		cursor.execute(insertStr)
 		cnx.commit()
 		cursor.close()
 		cnx.close()
 	except pymysql.MySQLError as err:
-		print "MySQLError: {0}".format(err)
+		print ("MySQLError: {0}".format(err))
 		return False
 
 	return True
@@ -112,20 +112,17 @@ def login_json():
 @app.post('/register')
 def register_json():
 	data = request.json
-	print data
 	a, userid = createUser(data["username"], data["password"])
 	if a:
 		auditEvent("Correct Register",userid)
 		return {"status": "OK", "message": "se registro correctamente el usuario"}
 	else:
-		auditEvent("Wrong Register", "NULL")
 		return {"status": "ERROR", "message": "No se pudo registrar"}
+		auditEvent("Wrong Register", "NULL")
 
 @app.post('/logout')
 def logout_json():
-	print "POST: logout..."
 	data = request.json
-	print data
 	a, userid = searchUser(data["username"], data["password"])
 	if a:
 		auditEvent("Correct Logout",userid)

@@ -1,5 +1,5 @@
 'use strict';
-
+var session = require('express-session');
 var express = require('express');
 var hb = require("express-handlebars");
 var bodyparser = require('body-parser');
@@ -21,6 +21,23 @@ app.engine('handlebars', hbs.engine)
 app.set('view engine', 'handlebars')
 app.use(bodyparser.urlencoded({extended: true}));
 
+app.use(session({
+    secret: 'mys3cr3t',
+    resave: 'false',
+    saveUnitialized: true,
+    cookie: {secure: false}
+}
+))
+
+app.get('/home',function(req, res){
+    var sess = req.session
+    if(!sess.token){
+        res.redirect('login');
+        return;
+    }
+    res.render('home');
+})
+
 var login = async function(credentials){
     console.log('credentials:');
     console.dir(credentials);
@@ -31,7 +48,6 @@ var login = async function(credentials){
         body: JSON.stringify(credentials)
     };
     await request.post(options, doLogin);
-
 }
 
 var doLogin = function(err, resp, body) {
@@ -46,16 +62,12 @@ var doLogin = function(err, resp, body) {
 
 // root..
 app.get('/', function(req, res) {
-    const homeParams = {
-        title: 'titulo',
-        identified: true,
-        items: [1,2,3],
-        helpers: {
-            bar: function() {return "bar";}
-        }
+    const sess = req.session
+    if(!sess.token) {
+        res.redirect('login');
+    } else {
+        res.redirect('home');        
     }
-    res.redirect('login');
-    //res.render('home', homeParams);
 });
 
 // login..
@@ -67,6 +79,7 @@ app.post('/login', function(req, res){
     console.log('POST /login');
     console.log('username:' + req.body.username);
     console.log('password:' + req.body.password);
+    const sess = req.session;
     const credentials = {
         username: req.body.username,
         password: req.body.password
@@ -79,32 +92,29 @@ app.post('/login', function(req, res){
     request.post(options, function(error, response, body) {
         let data = JSON.parse(body);
         console.dir(data);
-        if(data.status == "OK") {
-            const homeParams = {
-                title: 'titulo',
-                identified: true,
-                items: [1,2,3],
-                helpers: {
-                    bar: function() {return "bar";}
-                },
-                username: credentials.username,
-                password: credentials.password
+        if(!error && response.statusCode == 200){
+            if(data.status == "OK") {
+                sess.token = 'token1'; 
+                const homeParams = {
+                    title: 'titulo',
+                    identified: true,
+                    items: [1,2,3],
+                    helpers: {
+                        bar: function() {return "bar";}
+                    },
+                    username: credentials.username,
+                    password: credentials.password
+                }
+                res.redirect('home');   
+            } else {
+                const loginParams = {
+                    error: true,
+                    errorMsg: data.message
+                }
+                res.render('login', loginParams);
             }
-            res.render('home', homeParams);    
-        } else {
-            const loginParams = {
-                error: true,
-                errorMsg: data.message
-            }
-            res.render('login', loginParams);
         }
     });
-});
-
-var server = app.listen(8080, '127.0.0.1', function()   {
-    var host = server.address().address;
-    var port = server.address().port;
-    console.log("listening at http://%s:%s", host, port);
 });
 
 app.get('/register', function(req, res){
@@ -152,6 +162,7 @@ app.post('/register', function(req, res){
 app.post('/logout', function(req, res){
     console.log('POST /logout');
     console.log('username:' + req.body.username);
+    const sess = req.session
     const body = {
         username: req.body.username,
         password: req.body.password
@@ -165,7 +176,8 @@ app.post('/logout', function(req, res){
         let data = JSON.parse(body);
         console.dir(data);
         if(data.status == "OK") {
-            res.render('login');
+            sess.token = null
+            res.redirect('login')
         } else {
             const homeParams = {
                 title: 'titulo',
@@ -179,9 +191,15 @@ app.post('/logout', function(req, res){
                 logouterror: true,
                 errorMsg: data.message
             }
-            res.render('home', homeParams);
+            res.redirect('home')
         }
     });
+});
+
+var server = app.listen(8080, '127.0.0.1', function()   {
+    var host = server.address().address;
+    var port = server.address().port;
+    console.log("listening at http://%s:%s", host, port);
 });
 // npm install express-handlebars --save
 // npm run live

@@ -1,5 +1,9 @@
 from bottle import Bottle, route, run, get, template, post, request, response
 import pymysql
+import os
+import datetime
+import python_jwt as jwt
+import Crypto.PublicKey.RSA as RSA
 # import json
 
 
@@ -105,7 +109,10 @@ def login_json():
 	a,userid = searchUser(data["username"], data["password"])
 	if a:
 		auditEvent("Correct Login",userid)
-		return { "status": "OK", "message": "Bienvenido"}
+		payload = {'userid': userid}
+		token = generate_token(payload)
+		return { "status": "OK","token": token ,"message": "Bienvenido"}
+	
 	auditEvent("Wrong Login", "NULL")
 	return {"status": "ERROR", "message": "se ingreso mal el usuario"}
 
@@ -130,5 +137,31 @@ def logout_json():
 	else:
 		auditEvent("Correct Logout","NULL")
 		return { "status": "OK", "message": "ADIOS"}
+
+def generate_token(payload):
+	private_key_file = os.path.join(os.path.dirname(__file__), 'keypair.priv')
+	with open(private_key_file, 'r') as fd:
+		private_key = RSA.importKey(fd.read())
+	token = jwt.generate_jwt(payload,private_key,'RS256',datetime.timedelta(minutes=5))
 	
+	return token
+
+def validate_token(token):
+	payload = {'userid': '1234', 'role': 'admin'}
+	public_key_file = os.path.join(os.path.dirname(__file__), 'keypair.pub')
+	with open(public_key_file, 'r') as fd:
+		public_key = RSA.importKey(fd.read())
+	try:
+		header, claims = jwt.verify_jwt(token,public_key,['RS256'])
+	except jwt.exceptions.SignatureError:
+		print ('invalid token signature')
+		raise SystemExit()
+	for k in payload: assert claims[k] == payload[k]
+
+
+#caca = generate_token()
+#print(caca)
+#validate_token(caca)
+
+
 run(app,host='127.0.0.1',port=8081)

@@ -109,7 +109,7 @@ def login_json():
 	a,userid = searchUser(data["username"], data["password"])
 	if a:
 		auditEvent("Correct Login",userid)
-		payload = {'userid': userid}
+		payload = {'userid': userid, 'username': data["username"] }
 		token = generate_token(payload)
 		return { "status": "OK","token": token ,"message": "Bienvenido"}
 	
@@ -143,11 +143,9 @@ def generate_token(payload):
 	with open(private_key_file, 'r') as fd:
 		private_key = RSA.importKey(fd.read())
 	token = jwt.generate_jwt(payload,private_key,'RS256',datetime.timedelta(minutes=5))
-	
 	return token
 
 def validate_token(token):
-	payload = {'userid': '1234', 'role': 'admin'}
 	public_key_file = os.path.join(os.path.dirname(__file__), 'keypair.pub')
 	with open(public_key_file, 'r') as fd:
 		public_key = RSA.importKey(fd.read())
@@ -156,8 +154,6 @@ def validate_token(token):
 	except jwt.exceptions.SignatureError:
 		print ('invalid token signature')
 		raise SystemExit()
-	for k in payload: assert claims[k] == payload[k]
-
 
 #caca = generate_token()
 #print(caca)

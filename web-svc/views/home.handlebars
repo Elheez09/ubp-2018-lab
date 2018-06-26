@@ -7,20 +7,35 @@
 {{#if logouterror}}
     <h2> {{errorMsg}} </h2>
 {{/if}}
-{{!--
-{{#each items}}
-    <li>{{ this }}</li>
-{{/each}}
 
-<br>
+<form action="home" method="POST">
+    <input type="hidden" name="id" value="{{userid}}">
+    <input type="hidden" name="rol" value="{{rol}}">
+    <input type="submit" value="Events">    
+</form>
+<br></br>
+{{#if audit}}
+    <table>
+         <tr>
+             <th>ID</th>
+             <th>Date Time</th>
+             <th>Event</th>
+         </tr>
 
-{{#each items as |val key|}}
-    <li>key:{{ key }}, val:{{ val }}</li>
-{{/each}}
---}}
+    {{#each events}}
+        <tr>
+            <th>{{this.id}}</th>
+            <th>{{this.datetime}}</th>
+            <th>{{this.event}}</th>
+        </tr>
+    {{/each}}
 
+    </table>
+{{/if}}
+<br></br>
 <form action="logout" method="POST">
     <input type="hidden" name="username" value="{{username}}">
     <input type="hidden" name="password" value="{{password}}">
+    <input type="hidden" name="id" value="{{userid}}">
     <input type="submit" value="logout">
 </form>

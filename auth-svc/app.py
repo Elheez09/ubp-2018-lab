@@ -96,9 +96,9 @@ def getEvents(userid, rol):
 	try:
 		cnx = pymysql.connect(**mysql_config)
 		if rol == "admin":
-			query = "select * from audit_event"
+			query = "select * from audit_event order by time desc"
 		else:
-			query = "select * from audit_event where userid={}".format(userid)
+			query = "select * from audit_event where userid={} order by time desc".format(userid)
 		print(query)
 		cursor = cnx.cursor()
 		cursor.execute(query)
@@ -106,6 +106,7 @@ def getEvents(userid, rol):
 		for res in cursor:
 			dict_event = {"id":None, "datetime":None, "event":None}
 			dict_event['id']=res[0]
+			dict_event['userid'] = res[3]
 			time = "{}/{}/{} - {}:{}:{}".format(res[1].day, res[1].month, res[1].year, res[1].hour, res[1].minute, res[1].second)
 			dict_event['datetime']=time
 			dict_event['event']=res[2]

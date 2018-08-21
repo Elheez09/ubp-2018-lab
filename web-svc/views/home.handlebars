@@ -18,15 +18,17 @@
     <table>
          <tr>
              <th>ID</th>
+             <th>User ID</th>
              <th>Date Time</th>
              <th>Event</th>
          </tr>
 
     {{#each events}}
         <tr>
-            <th>{{this.id}}</th>
-            <th>{{this.datetime}}</th>
-            <th>{{this.event}}</th>
+            <td>{{this.id}}</td>
+            <td>{{this.userid}}</td>
+            <td>{{this.datetime}}</td>
+            <td>{{this.event}}</td>
         </tr>
     {{/each}}
 

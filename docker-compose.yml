@@ -1,0 +1,27 @@
+version: "3"
+services:
+  db:
+    build: db
+    ports: 
+      - 3306:3306
+    network_mode: 'host'
+
+  web:
+    build: web
+    ports: 
+      - 8080:8080
+    network_mode: 'host'
+
+  auth:
+    build: auth
+    depends_on: 
+      - db
+    ports:
+      - 8081:8081
+    network_mode: 'host'
+    environment:
+        MYSQL_HOST: db
+        MYSQL_DATABASE: users
+        MYSQL_USER: zumakiem
+        MYSQL_ROOT_PASSWORD: emauzumaki09
+        MYSQL_PASSWORD: zumakiem

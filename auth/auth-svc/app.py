@@ -9,10 +9,10 @@ import Crypto.PublicKey.RSA as RSA
 
 def createUser(user,password,rol):
 	mysql_config = {
-		'host':'localhost',
-		'db': 'users',
-		'user':'root',
-		'passwd':'emauzumaki09'
+		'host': os.environ["MYSQL_HOST"],
+		'db': os.environ["MYSQL_DATABASE"],
+		'user': os.environ["MYSQL_USER"],
+		'passwd': os.environ["MYSQL_PASSWORD"]
 	}
 	cnx = None
 	try: 
